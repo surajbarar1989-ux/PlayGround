@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0d0a18" />
+<meta name="description" content="Web Rush — a 3D Spider-Man swinging game. Sling through a neon sunset city and collect every spider token." />
+<title>Spider-Man: Web Rush</title>
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg" />
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="scene" aria-label="Spider-Man Web Rush 3D game"></canvas>
+
+  <div class="screen-fx" id="vignette"></div>
+  <div class="screen-fx" id="flash"></div>
+  <div class="screen-fx" id="speedlines"></div>
+
+  <!-- In-game HUD -->
+  <div id="hud" class="hud" aria-hidden="true">
+    <div class="objective panel">
+      <span class="eyebrow">City Objective</span>
+      <div class="obj-title">Collect the Spider Tokens</div>
+      <div class="obj-progress"><strong id="tokenCount">0</strong><span class="slash">/</span><span id="tokenTotal">12</span></div>
+    </div>
+
+    <div class="timer-wrap">
+      <div class="timer" id="timer">00:00.00</div>
+      <div class="best" id="bestTime">BEST &mdash;&mdash;</div>
+    </div>
+
+    <div class="minimap-wrap panel">
+      <canvas id="minimap" width="220" height="220"></canvas>
+      <div class="minimap-n">N</div>
+    </div>
+
+    <div class="speed-wrap">
+      <div class="speed-readout"><span id="speedNum">0</span><small>MPH</small></div>
+      <div class="speed-bar"><i id="speedFill"></i></div>
+      <div class="state-label" id="stateLabel">READY</div>
+    </div>
+
+    <div class="hint" id="hint">HOLD <kbd>SPACE</kbd> TO WEB-SWING &nbsp;&middot;&nbsp; <kbd>SHIFT</kbd> TO DIVE</div>
+
+    <div class="reticle" id="reticle"><i></i><b></b></div>
+    <div class="toast" id="toast"></div>
+
+    <div class="mission-complete" id="missionComplete">
+      <span class="eyebrow">All tokens collected</span>
+      <h2>CITY SAVED!</h2>
+      <div class="final-time" id="finalTime">00:00.00</div>
+      <div class="final-best" id="finalBest">NEW CITY RECORD</div>
+      <button class="btn btn-primary" id="againBtn">SWING AGAIN <span>R</span></button>
+    </div>
+  </div>
+
+  <!-- Touch controls -->
+  <div id="touchUI" class="touch-ui" aria-hidden="true">
+    <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
+    <div class="touch-buttons">
+      <button class="tbtn tbtn-zip" id="btnZip" type="button" aria-label="Web zip">ZIP</button>
+      <button class="tbtn tbtn-jump" id="btnJump" type="button" aria-label="Jump or dive">JUMP</button>
+      <button class="tbtn tbtn-web" id="btnWeb" type="button" aria-label="Hold to web swing"><span>WEB</span><small>HOLD</small></button>
+    </div>
+    <div class="look-note" id="lookNote">DRAG TO LOOK</div>
+  </div>
+
+  <button class="sound-toggle" id="soundToggle" type="button" aria-label="Toggle sound">&#9835;</button>
+  <button class="pause-toggle" id="pauseToggle" type="button" aria-label="Pause">&#10073;&#10073;</button>
+
+  <!-- Start screen -->
+  <div class="overlay cover" id="startScreen">
+    <div class="cover-art">
+      <div class="web-corner tl"></div>
+      <div class="web-corner tr"></div>
+      <div class="cover-inner">
+        <div class="kicker">A 3D WEB-SWINGING ADVENTURE</div>
+        <h1 class="logo"><span>SPIDER</span><span class="logo-dash">-</span><span class="logo-blue">MAN</span></h1>
+        <div class="subtitle">WEB RUSH</div>
+        <p class="blurb">The sun is going down on Nueva York. Twelve spider tokens are scattered across the skyline. Swing, dive and sling your way through the city before the clock beats you.</p>
+        <button class="btn btn-primary big" id="playBtn" type="button">START SWINGING</button>
+        <div class="controls-grid" id="desktopControls">
+          <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>Move / Steer</span></div>
+          <div><kbd>SPACE</kbd><span>Hold to shoot web</span></div>
+          <div><kbd>MOUSE</kbd><span>Look around</span></div>
+          <div><kbd>SHIFT</kbd><span>Dive / speed up</span></div>
+          <div><kbd>E</kbd><span>Web-zip</span></div>
+          <div><kbd>R</kbd><span>Restart run</span></div>
+        </div>
+        <div class="controls-grid touch-copy" id="touchControls">
+          <div><span class="tick">&#9711;</span><span>Left stick to move</span></div>
+          <div><span class="tick">&#8635;</span><span>Drag the sky to look</span></div>
+          <div><span class="tick">&#8593;</span><span>Hold WEB to swing</span></div>
+          <div><span class="tick">&#8226;</span><span>JUMP to leap &amp; dive</span></div>
+        </div>
+        <div class="fineprint">A fan-made playground built with Three.js. Best played with sound.</div>
+      </div>
+      <div class="cover-vignette"></div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="overlay loading" id="loadingScreen">
+    <div class="loader-web"></div>
+    <div class="loading-title">SPINNING UP THE CITY</div>
+    <div class="loading-bar"><i id="loadFill"></i></div>
+  </div>
+
+  <!-- Pause -->
+  <div class="overlay pause" id="pauseScreen">
+    <div class="pause-card panel">
+      <span class="eyebrow">Web-slinging on hold</span>
+      <h2>PAUSED</h2>
+      <div class="pause-stats">
+        <div><span>TOKENS</span><strong id="pauseTokens">0 / 12</strong></div>
+        <div><span>TIME</span><strong id="pauseTime">00:00.00</strong></div>
+      </div>
+      <button class="btn btn-primary" id="resumeBtn">RESUME</button>
+      <button class="btn btn-ghost" id="restartBtn">RESTART RUN</button>
+      <div class="pause-help">
+        <span><kbd>ESC</kbd> resume</span><span><kbd>M</kbd> mute</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
