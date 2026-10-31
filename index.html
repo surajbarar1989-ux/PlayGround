@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#080b12" />
+<title>Spider-Man — Web Rush</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23d21f2b'/%3E%3Cpath d='M32 14l4 12 11-6-7 11 12 3-13 4 6 11-11-6-2 12-4-12-11 6 7-11-13-3 13-4-7-11 11 6z' fill='%23101524'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<canvas id="game" aria-label="Spider-Man 3D game"></canvas>
+
+<div id="vignette"></div>
+<div id="speedlines"></div>
+<div id="reticle"><span></span></div>
+
+<div id="hud" class="hidden">
+  <div class="hud-left">
+    <div class="panel token-panel">
+      <div class="eyebrow">SPIDER-TOKENS</div>
+      <div class="token-row"><span id="tokenCount">0</span><span class="token-total">/ <span id="tokenTotal">24</span></span></div>
+      <div class="meter"><i id="tokenFill"></i></div>
+    </div>
+    <div class="panel time-panel">
+      <div class="eyebrow">RUN TIME</div>
+      <div class="mono" id="runTime">00:00</div>
+    </div>
+  </div>
+
+  <div class="hud-right">
+    <div class="panel stats-panel">
+      <div class="stat"><span id="speedVal">0</span><small>KM/H</small></div>
+      <div class="divider"></div>
+      <div class="stat"><span id="altVal">0</span><small>ALTITUDE</small></div>
+    </div>
+    <div class="hud-buttons">
+      <button id="muteBtn" class="icon-btn" title="Toggle sound" aria-label="Toggle sound">♪</button>
+      <button id="helpBtn" class="icon-btn" title="Controls" aria-label="Controls">?</button>
+    </div>
+  </div>
+
+  <div id="radarWrap">
+    <canvas id="radar" width="320" height="320"></canvas>
+    <div class="radar-ring"></div>
+    <div class="radar-n">N</div>
+  </div>
+
+  <div id="objective"><b>OBJECTIVE</b> <span class="obj-long">Swing across the city · collect every spider-token</span><span class="obj-short">Collect all 24 spider-tokens</span></div>
+  <div id="toast"></div>
+</div>
+
+<div id="touch" class="hidden">
+  <div id="stick"><div id="stickKnob"></div><div class="stick-hint">MOVE</div></div>
+  <div class="touch-actions">
+    <button id="jumpBtn" class="touch-btn small">JUMP</button>
+    <button id="webBtn" class="touch-btn web">WEB</button>
+  </div>
+</div>
+
+<section id="startScreen" class="overlay">
+  <div class="overlay-grid"></div>
+  <div class="title-wrap">
+    <div class="kicker">A FAN-MADE 3D PLAYGROUND</div>
+    <h1><span class="spider-red">SPIDER</span>-MAN</h1>
+    <h2>WEB RUSH</h2>
+    <p class="tagline">The city is your playground. Swing from tower to tower,<br class="wide-only" /> chain momentum, and collect all 24 spider-tokens.</p>
+
+    <div class="controls">
+      <div class="control"><kbd>W A S D</kbd><span>Move</span></div>
+      <div class="control"><kbd>SPACE</kbd><span>Jump · hold to web-swing</span></div>
+      <div class="control"><kbd>MOUSE</kbd><span>Look around</span></div>
+      <div class="control"><kbd>SHIFT</kbd><span>Sprint</span></div>
+      <div class="control"><kbd>R</kbd><span>Reset position</span></div>
+      <div class="control"><kbd>M</kbd><span>Mute</span></div>
+    </div>
+    <div class="touch-tip">Left stick to move · drag the sky to look · hold <b>WEB</b> to swing</div>
+
+    <button id="startBtn" class="cta">
+      <span class="cta-bolt">⚡</span> START SWINGING
+    </button>
+    <div class="start-foot">Best on desktop · also playable on phone &amp; tablet</div>
+  </div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-br"></div>
+</section>
+
+<section id="winScreen" class="overlay hidden">
+  <div class="overlay-grid win"></div>
+  <div class="win-wrap">
+    <div class="kicker">ALL TOKENS COLLECTED</div>
+    <h1>CITY <span class="spider-red">SAVED</span></h1>
+    <p class="tagline">That's a full sweep, web-head. The skyline is yours.</p>
+    <div class="win-stats">
+      <div><span id="winTime">00:00</span><small>TIME</small></div>
+      <div><span id="winSpeed">0</span><small>TOP SPEED · KM/H</small></div>
+      <div><span id="winSwings">0</span><small>SWINGS</small></div>
+    </div>
+    <button id="replayBtn" class="cta"><span class="cta-bolt">↻</span> SWING AGAIN</button>
+  </div>
+</section>
+
+<div id="helpSheet" class="sheet hidden">
+  <div class="sheet-card">
+    <h3>CONTROLS</h3>
+    <div class="sheet-row"><kbd>W A S D</kbd><span>Move / steer your swing</span></div>
+    <div class="sheet-row"><kbd>SPACE</kbd><span>Jump. Keep holding in the air to shoot a web and swing. Release to launch.</span></div>
+    <div class="sheet-row"><kbd>MOUSE</kbd><span>Orbit the camera (click the game to capture the mouse)</span></div>
+    <div class="sheet-row"><kbd>SHIFT</kbd><span>Sprint on the ground</span></div>
+    <div class="sheet-row"><kbd>R</kbd><span>Respawn at the nearest rooftop</span></div>
+    <div class="sheet-row"><kbd>M</kbd><span>Mute / unmute</span></div>
+    <p class="sheet-note">Swinging is physics-based: the web anchors to the nearest tower in front of you. Hold forward to pump the swing and gain height.</p>
+    <button id="closeHelp" class="cta small-cta">GOT IT</button>
+  </div>
+</div>
+
+<div id="loading"><div class="loading-mark"></div><p>SPINNING UP THE CITY…</p></div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
